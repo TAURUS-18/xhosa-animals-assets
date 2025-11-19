@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iziko Learn – Xhosa with Images</title>
+
+<!-- PWA: Enhanced for GitHub Pages -->
+<link rel="manifest" href="/xhosa-animals-assets/manifest.json">
+<meta name="theme-color" content="#ff6b35">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇿🇦</text></svg>">
+
+<style>
+  :root{--p:#ff6b35;--d:#1a1a1a;--l:#f8f9fa;--g:#666;}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif;}
+  body{background:var(--d);color:#fff;padding:20px;line-height:1.5;}
+  .c{max-width:500px;margin:auto;}
+  h1{text-align:center;color:var(--p);margin:20px 0;font-size:2rem;}
+  .card{background:#2a2a2a;padding:20px;border-radius:16px;margin:15px 0;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+  button{background:var(--p);color:#fff;border:none;padding:14px;border-radius:12px;font-size:1.1rem;width:100%;margin:8px 0;cursor:pointer;transition:.3s;}
+  button:hover{background:#e55a2b;transform:scale(1.02);}
+  button.corr{background:#4caf50 !important;}
+  button.wrong{background:#f44336 !important;}
+  .hearts{font-size:1.8rem;text-align:center;margin:15px 0;}
+  .prog{height:8px;background:#444;border-radius:4px;overflow:hidden;margin:15px 0;}
+  .bar{height:100%;background:var(--p);width:0%;transition:width .4s;}
+  .hidden{display:none;}
+  audio{width:100%;margin:10px 0;}
+  input[type=text]{width:100%;padding:12px;border-radius:12px;border:none;font-size:1rem;margin:10px 0;background:#444;color:#fff;}
+  .phrase{display:flex;flex-direction:column;align-items:center;font-size:1.3rem;margin:20px 0;}
+  .phrase img{max-width:200px;max-height:200px;border-radius:12px;margin:10px 0;box-shadow:0 4px 8px rgba(0,0,0,.3);}
+  .progress-topic{text-align:center;color:var(--p);font-weight:bold;}
+  .flag{font-size:2rem;vertical-align:middle;margin-right:8px;}
+</style>
+</head>
+<body>
+
+<div class="c">
+
+  <!-- Home: Topic Selection -->
+  <div id="home" class="card">
+    <h1><span class="flag">🇿🇦</span>Iziko Learn</h1>
+    <p style="text-align:center;color:#ccc;">Xhosa Phrases + Images</p>
+    <div class="streak">🔥 <span id="streak">0</span> day streak</div>
+    <div class="prog"><div class="bar" id="xpBar"></div></div>
+    <p><strong>Total XP:</strong> <span id="xp">0</span></p>
+    <h2>Choose Topic</h2>
+    <button onclick="startTopic(0)">1. Greetings 👋 (12 phrases)</button>
+    <button onclick="startTopic(1)">2. Family 👨‍👩‍👧 (13 phrases)</button>
+    <button onclick="startTopic(2)">3. Numbers 🔢 (13 phrases)</button>
+    <button onclick="startTopic(3)">4. Animals 🐘 (12 phrases + images)</button>
+    <button style="background:#666;" onclick="resetAll()">Reset Progress</button>
+  </div>
+
+  <!-- Teach Mode -->
+  <div id="teach" class="card hidden">
+    <div class="progress-topic" id="topicProgress">Animals: 0/12</div>
+    <div class="hearts" id="tHearts">❤️❤️❤️</div>
+    <div class="phrase">
+      <p id="engText" style="color:#aaa;"></p>
+      <img id="phraseImg" class="hidden" alt="Visual aid" />
+      <p id="xhoText" style="font-size:1.5rem;margin:10px 0;"></p>
+      <audio id="teachAudio" controls></audio>
+      <p style="color:#aaa;">Repeat after the audio!</p>
+    </div>
+    <button id="nextTeach" onclick="nextTeach()">Next Phrase</button>
+  </div>
+
+  <!-- Test Mode -->
+  <div id="test" class="card hidden">
+    <div class="progress-topic" id="testProgress">Animals Test: 0/5</div>
+    <div class="hearts" id="testHearts">❤️❤️❤️</div>
+    <p id="testQuestion" style="margin:20px 0;"></p>
+    <audio id="testAudio" controls class="hidden"></audio>
+    <div id="testOptions"></div>
+    <input id="testType" class="hidden" placeholder="Type the Xhosa phrase...">
+    <button id="testCheck" class="hidden" onclick="checkTyped()">Check Answer</button>
+    <button id="testContinue" class="hidden" onclick="nextTest()">Continue</button>
+  </div>
+
+</div>
+
+<script>
+/* ==============================================================
+   DATA: 50 Phrases + Images (Your GitHub Repo for Animals)
+   ============================================================== */
+const topics = [
+  {name: "Greetings", phrases: [  // No images
+    {eng: "Hello (to one person)", xho: "Molo", audio: "audio/greeting1.mp3"},
+    {eng: "Hello (to a group)", xho: "Molweni", audio: "audio/greeting2.mp3"},
+    {eng: "How are you? (singular)", xho: "Unjani?", audio: "audio/greeting3.mp3"},
+    {eng: "How are you? (plural)", xho: "Ninjani?", audio: "audio/greeting4.mp3"},
+    {eng: "I'm fine", xho: "Ndiphilile", audio: "audio/greeting5.mp3"},
+    {eng: "We're fine", xho: "Siphilile", audio: "audio/greeting6.mp3"},
+    {eng: "Welcome", xho: "Wamkelekile", audio: "audio/greeting7.mp3"},
+    {eng: "Long time no see", xho: "Kudala ndakubona", audio: "audio/greeting8.mp3"},
+    {eng: "What's your name?", xho: "Ungubani igama lakho?", audio: "audio/greeting9.mp3"},
+    {eng: "My name is...", xho: "Igama lam ngu...", audio: "audio/greeting10.mp3"},
+    {eng: "Good morning", xho: "Molo kusasa", audio: "audio/greeting11.mp3"},
+    {eng: "Good night", xho: "Ulale kahle", audio: "audio/greeting12.mp3"}
+  ]},
+  {name: "Family", phrases: [  // No images (add later if you upload to repo)
+    {eng: "Mother", xho: "Umama", audio: "audio/family1.mp3"},
+    // ... (same as before – full list in your code)
+  ]},
+  {name: "Numbers", phrases: [
+    // ... (same as before)
+  ]},
+  {name: "Animals", phrases: [
+    {eng: "Dog", xho: "Inja", audio: "audio/animal1.mp3", image: "https://raw.githubusercontent.com/TAURUS-18/xhosa-animals-assets/main/puppy.jpg"},
+    {eng: "Cat", xho: "Ikati", audio: "audio/animal2.mp3", image: "https://cdn-icons-png.flaticon.com/512/281/281415.png"},
+    {eng: "Cow", xho: "Inkomo", audio: "audio/animal3.mp3", image: "https://cdn-icons-png.flaticon.com/512/616/616492.png"},
+    {eng: "Horse", xho: "Ihashe", audio: "audio/animal4.mp3", image: "https://cdn-icons-png.flaticon.com/512/616/616479.png"},
+    {eng: "Goat", xho: "Ibhokhwe", audio: "audio/animal5.mp3", image: "https://cdn-icons-png.flaticon.com/512/616/616481.png"},
+    {eng: "Sheep", xho: "Igusha", audio: "audio/animal6.mp3", image: "https://cdn-icons-png.flaticon.com/512/616/616486.png"},
+    {eng: "Chicken", xho: "Inkukhu", audio: "audio/animal7.mp3", image: "https://cdn-icons-png.flaticon.com/512/616/616483.png"},
+    {eng: "Pig", xho: "Ihagu", audio: "audio/animal8.mp3", image: "https://raw.githubusercontent.com/TAURUS-18/xhosa-animals-assets/main/warthog.jpg"},
+    {eng: "Elephant", xho: "Indlovu", audio: "audio/animal9.mp3", image: "https://raw.githubusercontent.com/TAURUS-18/xhosa-animals-assets/main/elephant.jpg"},
+    {eng: "Lion", xho: "Ingonyama", audio: "audio/animal10.mp3", image: "https://raw.githubusercontent.com/TAURUS-18/xhosa-animals-assets/main/lion.jpg"},
+    {eng: "Zebra", xho: "Idube", audio: "audio/animal11.mp3", image: "https://raw.githubusercontent.com/TAURUS-18/xhosa-animals-assets/main/zebra.jpg"},
+    {eng: "Giraffe", xho: "Intaka yomoya", audio: "audio/animal12.mp3", image: "https://cdn-icons-png.flaticon.com/512/616/616480.png"}
+  ]}
+];
+
+// ... (rest of script same as your provided HTML – functions like updateGlobalUI, startTopic, etc.)
+
+/* ==============================================================
+   Basic Service Worker for Offline (stub – expands later)
+   ============================================================== */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/xhosa-animals-assets/sw.js');
+}
+</script>
+
+</body>
+</html>
